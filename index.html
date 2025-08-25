@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en-us">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/x-icon" href="favicon.png">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UNDERTALE</title>
+  <link rel="icon" type="image/x-icon" href="https://cdn.jsdelivr.net/gh/mokeisepic/fg@main/favicon.png">
   <style>
     html, body {
       margin: 0;
@@ -33,6 +32,7 @@
       justify-content: center;
       align-items: center;
       color: white;
+      z-index: 999;
     }
 
     .spinner {
@@ -59,20 +59,24 @@
   </div>
 
   <script>
-    // Directly load your full game.unx
-    const gameUnxUrl = "game.unx";
+    // Base URL of your CDN
+    const baseCDN = "https://cdn.jsdelivr.net/gh/mokeisepic/fg@main/";
 
-    // Load scripts
+    // Tell the game where the full .unx file is
+    window.gameUnxUrl = baseCDN + "game.unx";
+
+    // Load the Emscripten scripts from CDN
     const scripts = ["index.js", "runner.js"];
     scripts.forEach(src => {
       const s = document.createElement("script");
-      s.src = src;
+      s.src = baseCDN + src;
       document.body.appendChild(s);
     });
 
-    // Hide loading spinner after window load
+    // Hide loading spinner once the page finishes loading
     window.addEventListener("load", () => {
-      document.getElementById("loading").style.display = "none";
+      const loader = document.getElementById("loading");
+      if (loader) loader.style.display = "none";
     });
   </script>
 </body>
