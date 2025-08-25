@@ -4,51 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UNDERTALE</title>
-  <link rel="icon" type="image/x-icon" href="https://cdn.jsdelivr.net/gh/mokeisepic/fg@1.0/
-favicon.png">
+  <link rel="icon" type="image/x-icon" href="https://cdn.jsdelivr.net/gh/mokeisepic/fg@1.0/favicon.png">
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: black;
-      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
+      display: flex; justify-content: center; align-items: center;
+      background-color: black; font-family: Arial, sans-serif;
       overflow: hidden;
     }
-
-    canvas {
-      display: block;
-      background-color: black;
-    }
-
+    canvas { display: block; background-color: black; }
     .loading {
-      position: absolute;
-      top: 0; bottom: 0; left: 0; right: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      z-index: 999;
+      position: absolute; top: 0; bottom: 0; left: 0; right: 0;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      color: white; z-index: 999;
     }
-
     .spinner {
-      width: 30px;
-      height: 30px;
-      border: 5px solid #bdff00;
-      border-top: 5px solid #719900;
-      border-radius: 50%;
-      animation: rotation 0.8s linear infinite;
+      width: 30px; height: 30px;
+      border: 5px solid #bdff00; border-top: 5px solid #719900;
+      border-radius: 50%; animation: rotation 0.8s linear infinite;
     }
-
-    @keyframes rotation {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
+    @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -60,21 +36,47 @@ favicon.png">
   </div>
 
   <script>
-    // Base URL of your CDN
-    const baseCDN = "https://cdn.jsdelivr.net/gh/mokeisepic/fg@main/";
+    const baseCDN = "https://cdn.jsdelivr.net/gh/mokeisepic/fg@1.0/";
 
-    // Tell the game where the full .unx file is
-    window.gameUnxUrl = baseCDN + "game.unx";
+    // List your split game.unx parts
+    const gameParts = ["game.unx.part1", "game.unx.part2"].map(p => baseCDN + p);
 
-    // Load the Emscripten scripts from CDN
-    const scripts = ["index.js", "runner.js"];
-    scripts.forEach(src => {
-      const s = document.createElement("script");
-      s.src = baseCDN + src;
-      document.body.appendChild(s);
-    });
+    // Merge parts in the browser
+    function mergeFiles(parts) {
+      return new Promise((resolve, reject) => {
+        let buffers = [];
+        let index = 0;
 
-    // Hide loading spinner once the page finishes loading
+        function fetchPart() {
+          if (index >= parts.length) {
+            const blob = new Blob(buffers);
+            resolve(URL.createObjectURL(blob));
+            return;
+          }
+          fetch(parts[index])
+            .then(r => r.arrayBuffer())
+            .then(data => { buffers.push(data); index++; fetchPart(); })
+            .catch(reject);
+        }
+
+        fetchPart();
+      });
+    }
+
+    mergeFiles(gameParts)
+      .then(url => {
+        window.gameUnxUrl = url;
+
+        // Load the Emscripten scripts from CDN
+        ["index.js", "runner.js"].forEach(src => {
+          const s = document.createElement("script");
+          s.src = baseCDN + src;
+          document.body.appendChild(s);
+        });
+      })
+      .catch(err => console.error("Failed to load game parts:", err));
+
+    // Hide loading spinner after everything loads
     window.addEventListener("load", () => {
       const loader = document.getElementById("loading");
       if (loader) loader.style.display = "none";
